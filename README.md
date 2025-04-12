@@ -98,13 +98,13 @@ password-gl --passphrase --wordlist my_custom_words.txt
 
 ### 例6: プレフィックスとサフィックスを追加し、JSON形式でファイルに出力
 ```bash
-password-gl --prefix "web-" --suffix "-!" -l 10 --count 2 --output-format json --output-file passwords.json
+password-gl --prefix "web-" --suffix "!" -l 10 --count 2 --output-format json --output-file passwords.json
 ```
 `passwords.json` の内容例:
 ```json
 [
-  "web-aB1@cD2#e-!",
-  "web-fG3$hI4%j-!"
+  "web-aB1@cD2#e!",
+  "web-fG3$hI4%j!"
 ]
 ```
 
