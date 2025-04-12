@@ -1,3 +1,0 @@
-[console_scripts]
-password-gl = password_gl.generator:main
-pgl = password_gl.generator:main
