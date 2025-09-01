@@ -74,7 +74,7 @@ def generate_password(length=12, use_upper=True, use_lower=True, use_digits=True
     if body_length <= 0:
         raise ValueError("パスワード長がプレフィックスとサフィックスよりも短いです。")
 
-    max_attempts = 1000  # 失敗時の試行上限
+    max_attempts = 1000
     for attempt in range(max_attempts):
         pw = ''.join(random.choice(character_pool) for _ in range(body_length))
 
@@ -152,7 +152,6 @@ def main():
     if args.add_user:
         args.prefix = getpass.getuser() + args.prefix
 
-    # 生成したいパスワード/フレーズを出力するリスト
     output = []
 
     try:
@@ -200,4 +199,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
