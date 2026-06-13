@@ -21,7 +21,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     project_urls={
-        "Source": "https://github.com/Lapius7/pip.password-gl",
-        "Bug Tracker": "https://github.com/Lapius7/pip.password-gl/issues",
+        "Source": "https://github.com/Lapius7/password-gl",
+        "Bug Tracker": "https://github.com/Lapius7/password-gl/issues",
     },
 )
