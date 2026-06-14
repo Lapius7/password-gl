@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "password-gl"
+version = "2.0.0"
+description = "セキュアなパスワード / パスフレーズを１コマンドで生成するCLIツール"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Lapius7", email = "contact-us@lapius7.com" }]
+keywords = ["password", "passphrase", "generator", "cli", "security", "pin"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security",
+    "Topic :: Utilities",
+]
+
+[project.optional-dependencies]
+clipboard = ["pyperclip"]
+
+[project.scripts]
+password-gl = "password_gl.generator:main"
+pgl         = "password_gl.generator:main"
+
+[project.urls]
+Homepage = "https://github.com/Lapius7/password-gl"
+Issues   = "https://github.com/Lapius7/password-gl/issues"
