@@ -629,12 +629,15 @@ def _ask(prompt: str, default: str = "") -> str:
 
 
 def _ask_yn(prompt: str) -> bool:
-    try:
-        val = input(f"  {c('?', CYAN)} {c(prompt + ' (y/N): ', WHITE)}")
-        return val.strip().lower() == "y"
-    except (EOFError, KeyboardInterrupt):
-        print()
-        sys.exit(0)
+    while True:
+        try:
+            val = input(f"  {c('?', CYAN)} {c(prompt + ' (y/N): ', WHITE)}").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            sys.exit(0)
+        if val in ("y", "n", ""):
+            return val == "y"
+        print(f"  {c('  y または N を入力してください', GRAY)}")
 
 
 def _interactive(lang: str) -> dict:
