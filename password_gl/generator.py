@@ -24,13 +24,12 @@ from . import __version__
 # ── Console ────────────────────────────────────────────────────────
 
 def _setup_console():
-    if sys.platform == "win32":
-        try:
-            import ctypes
-            ctypes.windll.kernel32.SetConsoleMode(
-                ctypes.windll.kernel32.GetStdHandle(-11), 7)
-        except Exception:
-            pass
+    try:
+        import ctypes
+        ctypes.windll.kernel32.SetConsoleMode(  # type: ignore[attr-defined]
+            ctypes.windll.kernel32.GetStdHandle(-11), 7)  # type: ignore[attr-defined]
+    except Exception:
+        pass
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
@@ -695,7 +694,10 @@ def _ask(prompt: str, default: str = "") -> str:
 
 def _ask_yn(prompt: str, lang: str = "ja") -> bool:
     s = T[lang]
-    full = f"  {c('?', CYAN)} {c(prompt + ' (y/N): ', WHITE)}"
+    base = f"  {c('?', CYAN)} {c(prompt, WHITE)} "
+    # N highlighted in yellow = currently selected default (visible before Enter)
+    opts = f"{c('[', GRAY)}{c('y', GRAY)}{c('/', GRAY)}{c('N', BYEL)}{c(']', GRAY)}: "
+    full = base + opts
     while True:
         try:
             val = input(full).strip().lower()
@@ -705,7 +707,7 @@ def _ask_yn(prompt: str, lang: str = "ja") -> bool:
         if val in ("y", "n", ""):
             result = val == "y"
             chosen = c("y", GREEN) if result else c("N", GRAY)
-            sys.stdout.write(f"{_OVR}{full}{chosen}\n")
+            sys.stdout.write(f"{_OVR}{base}{chosen}\n")
             sys.stdout.flush()
             return result
         print(f"  {c('  ' + s['yn_hint'], GRAY)}")
