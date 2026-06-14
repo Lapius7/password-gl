@@ -1,10 +1,16 @@
-# password-gl [![PyPI Downloads](https://static.pepy.tech/badge/password-gl)](https://pepy.tech/projects/password-gl)
+# password-gl [![PyPI version](https://img.shields.io/pypi/v/password-gl)](https://pypi.org/project/password-gl/) [![PyPI Downloads](https://static.pepy.tech/badge/password-gl)](https://pepy.tech/projects/password-gl) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## 概要
+セキュアなパスワード / パスフレーズを１コマンドで生成する CLI ツール。
 
-パスワードを生成するコマンドラインツールです。
-セキュリティ要件に応じて、文字種、長さ、除外文字、プレフィックス/サフィックスなどを細かく指定してパスワードを生成できます。また、単語リストに基づいたパスフレーズの生成もサポートしています。
-生成結果は標準出力、ファイル、またはクリップボードに出力できます。
+- **暗号的に安全な乱数** (`secrets` モジュール) を使用
+- パスワード強度をエントロピー（bit）で可視化
+- パスワード / パスフレーズ / PIN の３モード
+- プロファイル保存・読み込み
+- 対話モード (`-i`) で全オプションをガイド付き設定
+- i18n（日本語 / English）対応
+- 新バージョン検出時に自動更新
+
+---
 
 ## インストール
 
@@ -12,137 +18,149 @@
 pip install password-gl
 ```
 
-## 依存関係
-
-- Python 3.x
-- `pyperclip` (任意): 生成結果をクリップボードにコピーする場合に必要です。
-  ```bash
-  pip install pyperclip
-  ```
-  _`pyperclip` がインストールされていない場合、`--copy` オプションは機能しませんが、他の機能は利用可能です。_
-
-## 使い方
+クリップボードコピー機能を使う場合（任意）:
 
 ```bash
-password-gl [オプション]
-pgl [オプション]
+pip install pyperclip
 ```
 
-- オプションを指定しない場合、デフォルト設定（長さ12、大文字・小文字・数字・記号を含む）のパスワードが1つ生成されます。
+---
 
-## 機能
+## クイックスタート
 
-### 共通オプション
+```bash
+pgl                        # info 画面
+pgl -l 20 --strict         # 20文字・全種類必須
+pgl --pin 6                # 6桁PIN
+pgl --passphrase --words 5 # 5単語パスフレーズ
+pgl --count 5 --copy       # 5個生成して最後をコピー
+pgl -i                     # 対話モード（全設定をガイド付きで）
+```
 
-- `--count <数>`: 生成するパスワード/パスフレーズの数を指定します (デフォルト: 1)。
-- `--copy`: 最後に生成されたパスワード/パスフレーズをクリップボードにコピーします (`pyperclip` が必要)。
-- `--output-format <フォーマット>`: 出力フォーマットを指定します (`text`, `json`, `csv`。デフォルト: `text`)。
-- `--output-file <ファイルパス>`: 生成結果を指定されたファイルに保存します。
-- `--separator <文字>`:
-  - パスワード生成時: `--every` と共に使用し、指定文字数ごとに区切り文字を挿入します。
-  - パスフレーズ生成時: 単語間の区切り文字を指定します (デフォルト: `-`)。
-- `--prefix <文字列>`: 生成されるパスワード/パスフレーズの先頭に追加する文字列を指定します。
-- `--suffix <文字列>`: 生成されるパスワード/パスフレーズの末尾に追加する文字列を指定します。
-- `--add-date`: 現在の日付 (`YYYYMMDD`) をプレフィックスとして追加します。
-- `--add-user`: 現在のログインユーザー名をプレフィックスとして追加します。
+---
 
-### パスワード生成オプション (デフォルトモード)
+## 出力例
 
-- `-l <長さ>`, `--length <長さ>`: パスワードの長さを指定します (デフォルト: 12)。
-- `--no-upper`: 大文字を使用しません。
-- `--no-lower`: 小文字を使用しません。
-- `--no-digits`: 数字を使用しません。
-- `--no-symbols`: 記号 (`string.punctuation`) を使用しません。
-- `--strict`: 指定された文字種（大文字、小文字、数字、記号で使用するもの）が**必ず**最低1つは含まれるようにします。例えば `--no-symbols` を指定した場合、大文字、小文字、数字が最低1つずつ含まれます。
-- `--no-similar`: 類似文字 (`O`, `0`, `l`, `1`, `I`, `|`) を除外します。
-- `--exclude-chars <文字>`: 指定された文字をパスワード生成から除外します。
-- `--starts-with-lower`: パスワードが必ず小文字で始まるようにします。
-- `--starts-with-upper`: パスワードが必ず大文字で始まるようにします。
-- `--readable`: 読みやすいように、英数字 (`a-zA-Z0-9`) のみを使用します。
-- `--charset <文字セット>`: パスワード生成に使用する文字を直接指定します。このオプションを使用すると、`--no-upper` などの文字種指定オプションは無視されます。
-- `--every <数>`: `--separator` と共に使用し、指定された文字数ごとに区切り文字を挿入します。
+```
+  🔑  K7#mPx@2qR!v
+       強度  ████████░░  強い  72 bit
 
-### パスフレーズ生成オプション
+  🔑  1.  aB3$nQ9@wZ!r
+       強度  ████████░░  強い  72 bit
 
-- `--passphrase`: パスフレーズ生成モードを有効にします。
-- `--words <単語数>`: パスフレーズに使用する単語の数を指定します (デフォルト: 4)。
-- `--wordlist <ファイルパス>`: パスフレーズ生成に使用する単語リストファイルのパスを指定します。指定しない場合は、スクリプト内のデフォルトリストまたは `words.txt` (スクリプトと同じディレクトリにある場合) を使用します。
-- `--separator <文字>`: 単語間の区切り文字を指定します (デフォルト: `-`)。
+  🔑  2.  mX4#pK7!vN2@
+       強度  ████████░░  強い  72 bit
+```
+
+---
+
+## オプション一覧
+
+### モード
+
+| オプション | 説明 | デフォルト |
+|---|---|---|
+| `-i, --interactive` | 対話モード（全設定をガイド付きで設定） | — |
+| `--pin <n>` | 数字のみの PIN を生成 | 4 |
+| `--passphrase` | 単語リストからパスフレーズを生成 | — |
+
+### パスワード設定
+
+| オプション | 説明 | デフォルト |
+|---|---|---|
+| `-l, --length <n>` | 文字数 | 12 |
+| `--count <n>` | 生成する数 | 1 |
+| `--strict` | 全種類（大文字・小文字・数字・記号）を必ず含める | — |
+| `--no-upper` | 大文字を使わない | — |
+| `--no-lower` | 小文字を使わない | — |
+| `--no-digits` | 数字を使わない | — |
+| `--no-symbols` | 記号を使わない | — |
+| `--no-similar` | 類似文字を除外 (`O 0 l 1 I \|`) | — |
+| `--readable` | 英数字のみ | — |
+| `--exclude-chars <s>` | 指定した文字を除外 | — |
+| `--charset <s>` | 使用文字を直接指定 | — |
+| `--prefix <s>` | 先頭に追加する文字列 | — |
+| `--suffix <s>` | 末尾に追加する文字列 | — |
+| `--starts-with-lower` | 小文字で始まる | — |
+| `--starts-with-upper` | 大文字で始まる | — |
+| `--separator <s>` | 区切り文字 | — |
+| `--every <n>` | N 文字ごとに区切り文字を挿入 | — |
+
+### パスフレーズ設定
+
+| オプション | 説明 | デフォルト |
+|---|---|---|
+| `--words <n>` | 単語数 | 4 |
+| `--wordlist <path>` | 単語リストファイルのパス | 内蔵リスト |
+| `--separator <s>` | 単語の区切り文字 | `-` |
+
+### 出力設定
+
+| オプション | 説明 |
+|---|---|
+| `--copy` | 最後の生成結果をクリップボードにコピー |
+| `--output-file <path>` | ファイルに保存 |
+| `--output-format <fmt>` | 出力形式 (`text` / `json` / `csv`) |
+| `--add-date` | 日付 (`YYYYMMDD`) をプレフィックスに追加 |
+| `--add-user` | ユーザー名をプレフィックスに追加 |
+
+### プロファイル
+
+よく使う設定を名前付きで保存・呼び出しできます。
+
+```bash
+pgl -l 20 --strict --no-similar --save-profile work   # 保存
+pgl --profile work                                     # 呼び出し
+pgl --list-profiles                                    # 一覧
+```
+
+プロファイルは `~/.pgl/profiles.json` に保存されます。
+
+### その他
+
+| オプション | 説明 |
+|---|---|
+| `-u, --update` | 最新バージョンに更新 |
+| `--lang <ja\|en>` | 表示言語（環境変数 `PGL_LANG` でも設定可） |
+| `-v, --version` | バージョンを表示 |
+| `-h, --help` | ヘルプを表示 |
+
+---
 
 ## 使用例
 
-### 例1: デフォルトのパスワードを生成
-
 ```bash
-password-gl
+# 16文字・記号なし・全種類必須を3つ生成
+pgl -l 16 --no-symbols --strict --count 3
+
+# 4文字ごとにハイフンで区切る
+pgl -l 16 --separator - --every 4
+# → abcd-EFGH-1234-!@#$
+
+# 日付＋ユーザー名をプレフィックスに
+pgl --add-date --add-user -l 8
+
+# 5単語パスフレーズをクリップボードにコピー
+pgl --passphrase --words 5 --copy
+
+# JSON形式でファイルに保存
+pgl --count 10 --output-format json --output-file passwords.json
+
+# プロファイルに保存して再利用
+pgl -l 24 --strict --no-similar --save-profile strong
+pgl --profile strong --count 3
 ```
 
-出力例: `aB1@cD2#eF3$`
+---
 
-### 例2: 長さ16で記号を含まないパスワードを3つ生成
+## 開発者
 
-```bash
-password-gl -l 16 --no-symbols --count 3
-```
+**Lapius7** — [https://dev.lapius7.com](https://dev.lapius7.com)
 
-出力例:
+- X: [@Lapius7](https://x.com/Lapius7)
+- GitHub: [Lapius7/password-gl](https://github.com/Lapius7/password-gl)
+- PyPI: [password-gl](https://pypi.org/project/password-gl/)
 
-```
-AbCdEfGhIjKlMnOp
-QrStUvWxYz123456
-789aBcDeFgHiJkLm
-```
+## ライセンス
 
-### 例3: 厳密モードで、大文字で始まり、類似文字を除外したパスワードを生成
-
-```bash
-password-gl --strict --starts-with-upper --no-similar
-```
-
-出力例: `PqRsTuVwXyZ2@3`
-
-### 例4: 5単語のパスフレーズを生成し、クリップボードにコピー
-
-```bash
-password-gl --passphrase --words 5 --copy
-```
-
-出力例: `magic-zebra-island-quest-dream` (クリップボードにもコピーされます)
-
-### 例5: カスタム単語リストを使用してパスフレーズを生成
-
-```bash
-password-gl --passphrase --wordlist my_custom_words.txt
-```
-
-### 例6: プレフィックスとサフィックスを追加し、JSON形式でファイルに出力
-
-```bash
-password-gl --prefix "web-" --suffix "!" -l 10 --count 2 --output-format json --output-file passwords.json
-```
-
-`passwords.json` の内容例:
-
-```json
-["web-aB1@cD2#e!", "web-fG3$hI4%j!"]
-```
-
-### 例7: パスワードを4文字ごとにハイフンで区切る
-
-```bash
-password-gl -l 16 --separator - --every 4
-```
-
-出力例: `abcd-EFGH-1234-!@#$`
-
-### 例8: 日付とユーザー名をプレフィックスに追加
-
-```bash
-password-gl --add-date --add-user -l 8
-```
-
-出力例: `20231027yourusername-aB1@cD2` (実行日とユーザー名により異なります)
-
-## エラーハンドリング
-
-指定された条件（例: 長さが短すぎる、使用可能な文字がないなど）によっては、パスワード/パスフレーズを生成できない場合があります。その場合はエラーメッセージが表示されます。
+MIT
