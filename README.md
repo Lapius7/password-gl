@@ -76,15 +76,13 @@ pgl -i                     # 対話モード（全設定をガイド付きで）
 | `--no-digits` | 数字を使わない | — |
 | `--no-symbols` | 記号を使わない | — |
 | `--no-similar` | 類似文字を除外 (`O 0 l 1 I \|`) | — |
-| `--readable` | 英数字のみ | — |
 | `--exclude-chars <s>` | 指定した文字を除外 | — |
-| `--charset <s>` | 使用文字を直接指定 | — |
+| `--charset <s>` | 使用文字を直接指定（他の文字種フラグより優先） | — |
+| `--starts-with <v>` | 先頭文字の制約 (`lower` / `upper`) | — |
 | `--prefix <s>` | 先頭に追加する文字列 | — |
 | `--suffix <s>` | 末尾に追加する文字列 | — |
-| `--starts-with-lower` | 小文字で始まる | — |
-| `--starts-with-upper` | 大文字で始まる | — |
 | `--separator <s>` | 区切り文字 | — |
-| `--every <n>` | N 文字ごとに区切り文字を挿入 | — |
+| `--every <n>` | N 文字ごとに区切り文字を挿入（`--separator` と組み合わせて使用） | — |
 
 ### パスフレーズ設定
 
