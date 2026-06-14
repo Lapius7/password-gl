@@ -116,6 +116,24 @@ T: dict = {
         "int_nosim":    "類似文字を除外 (O0l1)？",
         "int_count":    "生成する数",
         "int_copy":     "クリップボードにコピー？",
+        "int_no_upper": "大文字を使わない？",
+        "int_no_lower": "小文字を使わない？",
+        "int_no_digits":"数字を使わない？",
+        "int_no_sym":   "記号を使わない？",
+        "int_readable": "英数字のみ？",
+        "int_exclude":  "除外する文字 (例: @#$)",
+        "int_prefix":   "プレフィックス（先頭文字列）",
+        "int_suffix":   "サフィックス（末尾文字列）",
+        "int_separator":"区切り文字",
+        "int_every":    "区切りを入れる文字数",
+        "int_sw":       "先頭文字の制約",
+        "int_sw_none":  "なし",
+        "int_sw_lower": "小文字",
+        "int_sw_upper": "大文字",
+        "int_outfile":  "ファイルに保存するパス（スキップ: Enter）",
+        "int_pp_sep":   "単語の区切り文字",
+        "int_adv":      "詳細設定も行う？",
+        "int_charset":  "使用文字を直接指定（スキップ: Enter）",
         "o_interactive":"対話モードで設定",
         "o_pin":        "数字のみのPINを生成",
         "o_passphrase": "パスフレーズを生成",
@@ -200,6 +218,24 @@ T: dict = {
         "int_nosim":    "Exclude similar chars (O0l1)?",
         "int_count":    "How many to generate",
         "int_copy":     "Copy to clipboard?",
+        "int_no_upper": "Exclude uppercase?",
+        "int_no_lower": "Exclude lowercase?",
+        "int_no_digits":"Exclude digits?",
+        "int_no_sym":   "Exclude symbols?",
+        "int_readable": "Alphanumeric only?",
+        "int_exclude":  "Exclude chars (e.g. @#$)",
+        "int_prefix":   "Prefix (prepended to password)",
+        "int_suffix":   "Suffix (appended to password)",
+        "int_separator":"Separator character",
+        "int_every":    "Insert separator every N chars",
+        "int_sw":       "First character constraint",
+        "int_sw_none":  "none",
+        "int_sw_lower": "lowercase",
+        "int_sw_upper": "uppercase",
+        "int_outfile":  "Save to file path (Enter to skip)",
+        "int_pp_sep":   "Word separator",
+        "int_adv":      "Configure advanced options?",
+        "int_charset":  "Custom charset (Enter to skip)",
         "o_interactive":"Interactive setup mode",
         "o_pin":        "Generate numeric PIN",
         "o_passphrase": "Generate a passphrase",
@@ -325,15 +361,22 @@ def show_info(remote: Optional[str], lang: str):
     print(f"  🔑  {_logo()}  {c(f'v{__version__}', GRAY)}{_ver_badge(remote, lang)}")
     print(dbar())
     print(f"\n  {c(s['tagline'], GRAY)}\n")
-    print(f"  {c(s['author'], GRAY)}    Lapius7（https://dev.lapius7.com）")
-    print(f"  {c('X'.ljust(W), GRAY)}https://x.com/Lapius7")
-    print(f"  {c('GitHub'.ljust(W), GRAY)}https://github.com/Lapius7/password-gl")
-    print(f"  {c('PyPI'.ljust(W), GRAY)}https://pypi.org/project/password-gl")
-    print()
+    _dev_info(lang)
     print(f"  {c((s['guide']+' ').ljust(W), GRAY)}{s['usage_cmd']}")
     print(f"  {c((s['help_lbl']+' ').ljust(W), GRAY)}pgl --help")
     print()
     print(dbar())
+    print()
+
+
+def _dev_info(lang: str):
+    s = T[lang]
+    W = 10
+    print()
+    print(f"  {c(s['author'], GRAY)}    Lapius7（https://dev.lapius7.com）")
+    print(f"  {c('X'.ljust(W), GRAY)}https://x.com/Lapius7")
+    print(f"  {c('GitHub'.ljust(W), GRAY)}https://github.com/Lapius7/password-gl")
+    print(f"  {c('PyPI'.ljust(W), GRAY)}https://pypi.org/project/password-gl")
     print()
 
 
@@ -343,6 +386,8 @@ def show_help(lang: str):
     print(dbar())
     print(f"  🔑  {_logo()}  {c(f'v{__version__}', GRAY)}")
     print(c(f"  {s['tagline']}", GRAY))
+    print(dbar())
+    _dev_info(lang)
     print(dbar())
 
     _section(s["usage"])
@@ -607,22 +652,72 @@ def _interactive(lang: str) -> dict:
     result: dict = {}
 
     if mode == "2":
+        # ── Passphrase ──
         result["passphrase"] = True
         w = _ask(s["int_words"], "4")
         result["words"] = int(w) if w.isdigit() else 4
+        sep = _ask(s["int_pp_sep"], "-")
+        if sep != "-":
+            result["separator"] = sep
+        pfx = _ask(s["int_prefix"], "")
+        if pfx: result["prefix"] = pfx
+        sfx = _ask(s["int_suffix"], "")
+        if sfx: result["suffix"] = sfx
+
     elif mode == "3":
+        # ── PIN ──
         d = _ask(s["int_digits"], "6")
         result["pin"] = int(d) if d.isdigit() else 6
+
     else:
+        # ── Password ──
         ln = _ask(s["int_length"], "12")
         result["length"] = int(ln) if ln.isdigit() else 12
-        result["strict"]    = _ask_yn(s["int_strict"])
-        result["no_similar"]= _ask_yn(s["int_nosim"])
+
+        print()
+        print(f"  {c('── ' + s['opts'] + ' ──', GRAY)}")
+        result["strict"]     = _ask_yn(s["int_strict"])
+        result["no_similar"] = _ask_yn(s["int_nosim"])
+
+        advanced = _ask_yn(s["int_adv"])
+        if advanced:
+            print()
+            result["no_upper"]  = _ask_yn(s["int_no_upper"])
+            result["no_lower"]  = _ask_yn(s["int_no_lower"])
+            result["no_digits"] = _ask_yn(s["int_no_digits"])
+            result["no_symbols"]= _ask_yn(s["int_no_sym"])
+            result["readable"]  = _ask_yn(s["int_readable"])
+
+            charset = _ask(s["int_charset"], "")
+            if charset: result["charset"] = charset
+
+            excl = _ask(s["int_exclude"], "")
+            if excl: result["exclude_chars"] = excl
+
+            print()
+            sw_opts = f"[0] {s['int_sw_none']}  [1] {s['int_sw_lower']}  [2] {s['int_sw_upper']}"
+            sw = _ask(f"{s['int_sw']}  {c(sw_opts, GRAY)}", "0")
+            if sw == "1": result["starts_with"] = "lower"
+            elif sw == "2": result["starts_with"] = "upper"
+
+            sep = _ask(s["int_separator"], "")
+            if sep:
+                result["separator"] = sep
+                every = _ask(s["int_every"], "4")
+                result["every"] = int(every) if every.isdigit() else 4
+
+            pfx = _ask(s["int_prefix"], "")
+            if pfx: result["prefix"] = pfx
+            sfx = _ask(s["int_suffix"], "")
+            if sfx: result["suffix"] = sfx
 
     print()
+    print(f"  {c('── Output ──', GRAY)}")
     cnt = _ask(s["int_count"], "1")
     result["count"] = int(cnt) if cnt.isdigit() else 1
     result["copy"]  = _ask_yn(s["int_copy"])
+    outfile = _ask(s["int_outfile"], "")
+    if outfile: result["output_file"] = outfile
 
     print()
     print(dbar())
@@ -712,15 +807,32 @@ def main():
         opts = _interactive(lang)
         if "passphrase" in opts:
             args.passphrase = True
-            args.words = opts.get("words", 4)
+            args.words      = opts.get("words", 4)
+            args.separator  = opts.get("separator", args.separator)
+            args.prefix     = opts.get("prefix", args.prefix)
+            args.suffix     = opts.get("suffix", args.suffix)
         elif "pin" in opts:
             args.pin = opts.get("pin", 6)
         else:
-            args.length     = opts.get("length", 12)
-            args.strict     = opts.get("strict", False)
-            args.no_similar = opts.get("no_similar", False)
-        args.count = opts.get("count", 1)
-        args.copy  = opts.get("copy", False)
+            args.length      = opts.get("length", 12)
+            args.strict      = opts.get("strict", False)
+            args.no_similar  = opts.get("no_similar", False)
+            args.no_upper    = opts.get("no_upper",   False)
+            args.no_lower    = opts.get("no_lower",   False)
+            args.no_digits   = opts.get("no_digits",  False)
+            args.no_symbols  = opts.get("no_symbols", False)
+            args.readable    = opts.get("readable",   False)
+            args.charset     = opts.get("charset",    args.charset)
+            args.exclude_chars = opts.get("exclude_chars", args.exclude_chars)
+            args.prefix      = opts.get("prefix", args.prefix)
+            args.suffix      = opts.get("suffix", args.suffix)
+            args.separator   = opts.get("separator", args.separator)
+            args.every       = opts.get("every",   args.every)
+            if "starts_with" in opts:
+                starts_with = opts["starts_with"]
+        args.count       = opts.get("count", 1)
+        args.copy        = opts.get("copy",  False)
+        args.output_file = opts.get("output_file", args.output_file)
 
     # No generation intent → info screen
     generation_intent = (
