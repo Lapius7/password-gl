@@ -130,7 +130,8 @@ T: dict = {
         "int_sw_none":  "なし",
         "int_sw_lower": "小文字",
         "int_sw_upper": "大文字",
-        "int_outfile":  "ファイルに保存するパス（スキップ: Enter）",
+        "int_outfile_yn":"ファイルに保存する？",
+        "int_outfile":  "保存先のファイルパス",
         "int_pp_sep":   "単語の区切り文字",
         "int_adv":      "詳細設定も行う？",
         "int_charset":  "使用文字を直接指定（スキップ: Enter）",
@@ -232,7 +233,8 @@ T: dict = {
         "int_sw_none":  "none",
         "int_sw_lower": "lowercase",
         "int_sw_upper": "uppercase",
-        "int_outfile":  "Save to file path (Enter to skip)",
+        "int_outfile_yn":"Save to file?",
+        "int_outfile":  "File path to save",
         "int_pp_sep":   "Word separator",
         "int_adv":      "Configure advanced options?",
         "int_charset":  "Custom charset (Enter to skip)",
@@ -685,33 +687,41 @@ def _interactive(lang: str) -> dict:
         advanced = _ask_yn(s["int_adv"])
         if advanced:
             print()
-            result["no_upper"]  = _ask_yn(s["int_no_upper"])
-            result["no_lower"]  = _ask_yn(s["int_no_lower"])
-            result["no_digits"] = _ask_yn(s["int_no_digits"])
-            result["no_symbols"]= _ask_yn(s["int_no_sym"])
-            result["readable"]  = _ask_yn(s["int_readable"])
+            no_upper  = _ask_yn(s["int_no_upper"])
+            no_lower  = _ask_yn(s["int_no_lower"])
+            no_digits = _ask_yn(s["int_no_digits"])
+            no_symbols= _ask_yn(s["int_no_sym"])
+            result["no_upper"]  = no_upper
+            result["no_lower"]  = no_lower
+            result["no_digits"] = no_digits
+            result["no_symbols"]= no_symbols
+
+            # readable は文字種が残っている場合のみ意味があるので、
+            # 全種類OFFの場合はスキップ（矛盾するため）
+            if not (no_upper and no_lower and no_digits and no_symbols):
+                result["readable"] = _ask_yn(s["int_readable"])
 
             charset = _ask(s["int_charset"], "")
             if charset: result["charset"] = charset
 
-            excl = _ask(s["int_exclude"], "")
+            excl = _ask(f"{s['int_exclude']}（スキップ: Enter）", "")
             if excl: result["exclude_chars"] = excl
 
             print()
-            sw_opts = f"[0] {s['int_sw_none']}  [1] {s['int_sw_lower']}  [2] {s['int_sw_upper']}"
+            sw_opts = f"[0] {s['int_sw_none']}  [1] {s['int_sw_lower']}  [2] {s['int_sw_upper']}  （Enter でスキップ）"
             sw = _ask(f"{s['int_sw']}  {c(sw_opts, GRAY)}", "0")
             if sw == "1": result["starts_with"] = "lower"
             elif sw == "2": result["starts_with"] = "upper"
 
-            sep = _ask(s["int_separator"], "")
+            sep = _ask(f"{s['int_separator']}（スキップ: Enter）", "")
             if sep:
                 result["separator"] = sep
                 every = _ask(s["int_every"], "4")
                 result["every"] = int(every) if every.isdigit() else 4
 
-            pfx = _ask(s["int_prefix"], "")
+            pfx = _ask(f"{s['int_prefix']}（スキップ: Enter）", "")
             if pfx: result["prefix"] = pfx
-            sfx = _ask(s["int_suffix"], "")
+            sfx = _ask(f"{s['int_suffix']}（スキップ: Enter）", "")
             if sfx: result["suffix"] = sfx
 
     print()
@@ -719,8 +729,9 @@ def _interactive(lang: str) -> dict:
     cnt = _ask(s["int_count"], "1")
     result["count"] = int(cnt) if cnt.isdigit() else 1
     result["copy"]  = _ask_yn(s["int_copy"])
-    outfile = _ask(s["int_outfile"], "")
-    if outfile: result["output_file"] = outfile
+    if _ask_yn(s["int_outfile_yn"]):
+        outfile = _ask(s["int_outfile"], "")
+        if outfile: result["output_file"] = outfile
 
     print()
     print(dbar())
