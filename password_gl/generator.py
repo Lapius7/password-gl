@@ -120,7 +120,6 @@ T: dict = {
         "int_no_lower": "小文字を使わない？",
         "int_no_digits":"数字を使わない？",
         "int_no_sym":   "記号を使わない？",
-        "int_readable": "英数字のみ？",
         "int_exclude":  "除外する文字 (例: @#$)",
         "int_prefix":   "プレフィックス（先頭文字列）",
         "int_suffix":   "サフィックス（末尾文字列）",
@@ -146,7 +145,6 @@ T: dict = {
         "o_no_digits":  "数字を使わない",
         "o_no_symbols": "記号を使わない",
         "o_no_similar": "類似文字を除外 (O0l1)",
-        "o_readable":   "英数字のみ",
         "o_exclude":    "除外する文字",
         "o_charset":    "使用文字を直接指定",
         "o_prefix":     "先頭に追加する文字列",
@@ -223,7 +221,6 @@ T: dict = {
         "int_no_lower": "Exclude lowercase?",
         "int_no_digits":"Exclude digits?",
         "int_no_sym":   "Exclude symbols?",
-        "int_readable": "Alphanumeric only?",
         "int_exclude":  "Exclude chars (e.g. @#$)",
         "int_prefix":   "Prefix (prepended to password)",
         "int_suffix":   "Suffix (appended to password)",
@@ -249,7 +246,6 @@ T: dict = {
         "o_no_digits":  "No digits",
         "o_no_symbols": "No symbols",
         "o_no_similar": "Exclude similar chars (O0l1)",
-        "o_readable":   "Alphanumeric only",
         "o_exclude":    "Characters to exclude",
         "o_charset":    "Custom character set",
         "o_prefix":     "Prefix string",
@@ -408,7 +404,6 @@ def show_help(lang: str):
     _opt("    --no-digits",        s["o_no_digits"])
     _opt("    --no-symbols",       s["o_no_symbols"])
     _opt("    --no-similar",       s["o_no_similar"])
-    _opt("    --readable",         s["o_readable"])
     _opt("    --exclude-chars <s>",s["o_exclude"])
     _opt("    --charset <s>",      s["o_charset"])
     _opt("    --prefix <s>",       s["o_prefix"])
@@ -450,7 +445,7 @@ def show_help(lang: str):
 # ── Strength & Entropy ─────────────────────────────────────────────
 
 def _pool_size(use_upper, use_lower, use_digits, use_symbols,
-               no_similar, exclude_chars, charset, readable) -> int:
+               no_similar, exclude_chars, charset) -> int:
     if charset:
         return max(len(set(charset)), 1)
     pool = set()
@@ -460,7 +455,6 @@ def _pool_size(use_upper, use_lower, use_digits, use_symbols,
     if use_symbols: pool |= set(string.punctuation)
     if no_similar:  pool -= set("O0l1I|")
     if exclude_chars: pool -= set(exclude_chars)
-    if readable:    pool = {ch for ch in pool if ch.isalnum()}
     return max(len(pool), 1)
 
 
@@ -559,7 +553,7 @@ def _load_wordlist(path: Optional[str] = None) -> list:
 
 def generate_password(length=12, use_upper=True, use_lower=True, use_digits=True,
                       use_symbols=True, strict=False, exclude_chars="", starts_with=None,
-                      prefix="", suffix="", no_similar=False, readable=False,
+                      prefix="", suffix="", no_similar=False,
                       charset=None, separator=None, every=None):
     if charset:
         pool = list(charset)
@@ -571,7 +565,6 @@ def generate_password(length=12, use_upper=True, use_lower=True, use_digits=True
         if use_symbols: pool += list(string.punctuation)
         if no_similar:  pool = [ch for ch in pool if ch not in "O0l1I|"]
         if exclude_chars: pool = [ch for ch in pool if ch not in exclude_chars]
-        if readable:    pool = [ch for ch in pool if ch.isalnum()]
 
     if not pool:
         raise ValueError("no_chars")
@@ -696,11 +689,6 @@ def _interactive(lang: str) -> dict:
             result["no_digits"] = no_digits
             result["no_symbols"]= no_symbols
 
-            # readable は文字種が残っている場合のみ意味があるので、
-            # 全種類OFFの場合はスキップ（矛盾するため）
-            if not (no_upper and no_lower and no_digits and no_symbols):
-                result["readable"] = _ask_yn(s["int_readable"])
-
             charset = _ask(s["int_charset"], "")
             if charset: result["charset"] = charset
 
@@ -763,7 +751,6 @@ def main():
     parser.add_argument("--no-similar",         action="store_true")
     parser.add_argument("--exclude-chars",      type=str, default="")
     parser.add_argument("--strict",             action="store_true")
-    parser.add_argument("--readable",           action="store_true")
     parser.add_argument("--charset",            type=str)
     parser.add_argument("--separator",          type=str)
     parser.add_argument("--every",              type=int)
@@ -835,7 +822,6 @@ def main():
             args.no_lower    = opts.get("no_lower",   False)
             args.no_digits   = opts.get("no_digits",  False)
             args.no_symbols  = opts.get("no_symbols", False)
-            args.readable    = opts.get("readable",   False)
             args.charset     = opts.get("charset",    args.charset)
             args.exclude_chars = opts.get("exclude_chars", args.exclude_chars)
             args.prefix      = opts.get("prefix", args.prefix)
@@ -852,7 +838,7 @@ def main():
     generation_intent = (
         args.interactive or args.pin is not None or args.passphrase or args.profile or
         args.no_upper or args.no_lower or args.no_digits or args.no_symbols or
-        args.strict or args.no_similar or args.readable or args.charset or
+        args.strict or args.no_similar or args.charset or
         args.count != 1 or args.length != 12 or args.prefix or args.suffix or
         args.copy or args.output_file or args.add_date or args.add_user or
         args.exclude_chars or args.separator
@@ -879,7 +865,7 @@ def main():
     else:
         ps = _pool_size(
             not args.no_upper, not args.no_lower, not args.no_digits, not args.no_symbols,
-            args.no_similar, args.exclude_chars, args.charset, args.readable
+            args.no_similar, args.exclude_chars, args.charset
         )
         bits = _entropy(ps, args.length)
 
@@ -905,7 +891,6 @@ def main():
                     prefix=args.prefix,
                     suffix=args.suffix,
                     no_similar=args.no_similar,
-                    readable=args.readable,
                     charset=args.charset,
                     separator=args.separator,
                     every=args.every,
@@ -949,7 +934,6 @@ def main():
             "no_symbols": args.no_symbols,
             "strict":     args.strict,
             "no_similar": args.no_similar,
-            "readable":   args.readable,
         })
         print(c(f"  {s['prof_saved'].format(args.save_profile)}", GREEN))
         print()
