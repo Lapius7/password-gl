@@ -111,6 +111,7 @@ T: dict = {
         "yn_hint":               "y または N を入力してください",
         "skip_hint":             "スキップ: Enter",
         "int_output":            "出力",
+        "int_settings":          "設定",
         "o_starts_with":         "先頭文字の制約 (lower / upper)",
         "int_title":    "interactive",
         "int_mode":     "モード",
@@ -129,8 +130,8 @@ T: dict = {
         "int_no_digits":"数字を使わない？",
         "int_no_sym":   "記号を使わない？",
         "int_exclude":  "除外する文字 (例: @#$)",
-        "int_prefix":   "プレフィックス（先頭文字列）",
-        "int_suffix":   "サフィックス（末尾文字列）",
+        "int_prefix":   "プレフィックス",
+        "int_suffix":   "サフィックス",
         "int_separator":"区切り文字",
         "int_every":    "区切りを入れる文字数",
         "int_sw":       "先頭文字の制約",
@@ -141,7 +142,7 @@ T: dict = {
         "int_outfile":  "保存先のファイルパス",
         "int_pp_sep":   "単語の区切り文字",
         "int_adv":      "詳細設定も行う？",
-        "int_charset":  "使用文字を直接指定（スキップ: Enter）",
+        "int_charset":  "使用文字を直接指定",
         "o_interactive":"対話モードで設定",
         "o_pin":        "数字のみのPINを生成",
         "o_passphrase": "パスフレーズを生成",
@@ -220,6 +221,7 @@ T: dict = {
         "yn_hint":               "Please enter y or N",
         "skip_hint":             "skip: Enter",
         "int_output":            "Output",
+        "int_settings":          "Settings",
         "o_starts_with":         "First char constraint (lower / upper)",
         "int_title":    "interactive",
         "int_mode":     "Mode",
@@ -238,8 +240,8 @@ T: dict = {
         "int_no_digits":"Exclude digits?",
         "int_no_sym":   "Exclude symbols?",
         "int_exclude":  "Exclude chars (e.g. @#$)",
-        "int_prefix":   "Prefix (prepended to password)",
-        "int_suffix":   "Suffix (appended to password)",
+        "int_prefix":   "Prefix",
+        "int_suffix":   "Suffix",
         "int_separator":"Separator character",
         "int_every":    "Insert separator every N chars",
         "int_sw":       "First character constraint",
@@ -250,7 +252,7 @@ T: dict = {
         "int_outfile":  "File path to save",
         "int_pp_sep":   "Word separator",
         "int_adv":      "Configure advanced options?",
-        "int_charset":  "Custom charset (Enter to skip)",
+        "int_charset":  "Custom charset",
         "o_interactive":"Interactive setup mode",
         "o_pin":        "Generate numeric PIN",
         "o_passphrase": "Generate a passphrase",
@@ -497,6 +499,40 @@ def _show_password(pw: str, bits: float, lang: str, index: Optional[int] = None)
     print(f"     {c(s['strength'], GRAY)}  {bar_str}  {c(label, color)}  {c(f'{bits:.0f} bit', GRAY)}")
 
 
+def _show_settings_summary(args, starts_with, lang: str):
+    s = T[lang]
+    items = []
+    if getattr(args, "passphrase", False):
+        items.append(("mode", s["int_mode_pp"]))
+        items.append(("words", str(args.words)))
+    elif getattr(args, "pin", None) is not None:
+        items.append(("mode", s["int_mode_pin"]))
+        items.append(("digits", str(args.pin)))
+    else:
+        items.append(("mode", s["int_mode_pw"]))
+        items.append(("length", str(args.length)))
+        if args.charset:
+            items.append(("charset", args.charset))
+        else:
+            types = []
+            if not args.no_upper:   types.append("A-Z")
+            if not args.no_lower:   types.append("a-z")
+            if not args.no_digits:  types.append("0-9")
+            if not args.no_symbols: types.append("!@#…")
+            if types: items.append(("chars", " ".join(types)))
+        if args.strict:      items.append(("strict", "✓"))
+        if args.no_similar:  items.append(("no-similar", "✓"))
+        if args.exclude_chars: items.append(("exclude", args.exclude_chars))
+        if starts_with:      items.append(("starts-with", starts_with))
+        if args.separator:   items.append(("sep", f"'{args.separator}' / {args.every}"))
+    if args.prefix:  items.append(("prefix", args.prefix))
+    if args.suffix:  items.append(("suffix", args.suffix))
+    if args.count > 1: items.append(("count", str(args.count)))
+
+    parts = "  ".join(f"{c(k, GRAY)} {c(v, WHITE)}" for k, v in items)
+    print(f"  {c(s['int_settings'], GRAY)}  {parts}")
+
+
 # ── Profile management ─────────────────────────────────────────────
 
 _PROFILE_FILE = Path.home() / ".pgl" / "profiles.json"
@@ -708,7 +744,7 @@ def _interactive(lang: str) -> dict:
             result["no_digits"] = no_digits
             result["no_symbols"]= no_symbols
 
-            charset = _ask(f"{s['int_charset']}", "")
+            charset = _ask(f"{s['int_charset']}{skip}", "")
             if charset:
                 result["charset"] = charset
                 if no_upper or no_lower or no_digits or no_symbols:
@@ -910,6 +946,10 @@ def main():
 
     output = []
     print()
+
+    if args.interactive:
+        _show_settings_summary(args, starts_with, lang)
+        print()
 
     try:
         for i in range(args.count):
