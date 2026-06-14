@@ -675,11 +675,19 @@ def generate_pin(digits=4):
 
 # ── Interactive mode ──────────────────────────────────────────────
 
+_OVR = "\x1b[1A\r\x1b[2K"  # cursor up, return, erase line
+
+
 def _ask(prompt: str, default: str = "") -> str:
     hint = f" [{default}]" if default else ""
+    full = f"  {c('?', CYAN)} {c(prompt + hint + ': ', WHITE)}"
     try:
-        val = input(f"  {c('?', CYAN)} {c(prompt + hint + ': ', WHITE)}")
-        return val.strip() or default
+        val = input(full)
+        result = val.strip() or default
+        if not val.strip() and result:
+            sys.stdout.write(f"{_OVR}{full}{c(result, GRAY)}\n")
+            sys.stdout.flush()
+        return result
     except (EOFError, KeyboardInterrupt):
         print()
         sys.exit(0)
@@ -687,14 +695,19 @@ def _ask(prompt: str, default: str = "") -> str:
 
 def _ask_yn(prompt: str, lang: str = "ja") -> bool:
     s = T[lang]
+    full = f"  {c('?', CYAN)} {c(prompt + ' (y/N): ', WHITE)}"
     while True:
         try:
-            val = input(f"  {c('?', CYAN)} {c(prompt + ' (y/N): ', WHITE)}").strip().lower()
+            val = input(full).strip().lower()
         except (EOFError, KeyboardInterrupt):
             print()
             sys.exit(0)
         if val in ("y", "n", ""):
-            return val == "y"
+            result = val == "y"
+            chosen = c("y", GREEN) if result else c("N", GRAY)
+            sys.stdout.write(f"{_OVR}{full}{chosen}\n")
+            sys.stdout.flush()
+            return result
         print(f"  {c('  ' + s['yn_hint'], GRAY)}")
 
 
