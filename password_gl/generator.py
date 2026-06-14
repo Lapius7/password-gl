@@ -325,19 +325,27 @@ def _ver_badge(remote: Optional[str], lang: str) -> str:
     return c(f"（{s['ver_ok']}）", GREEN)
 
 
-def _do_pip_upgrade() -> bool:
-    return subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--upgrade", "password-gl"],
+def _do_pip_upgrade() -> Optional[str]:
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "password-gl"],
         capture_output=True
-    ).returncode == 0
+    )
+    if result.returncode != 0:
+        return None
+    try:
+        import importlib.metadata
+        return importlib.metadata.version("password-gl")
+    except Exception:
+        return None
 
 
 def auto_update(remote: str, lang: str):
     s = T[lang]
     print()
     print(c("  " + s["auto_upd"].format(remote), YEL))
-    if _do_pip_upgrade():
-        print(c("  " + s["auto_upd_ok"].format(remote), GREEN))
+    installed = _do_pip_upgrade()
+    if installed and _parse_ver(installed) >= _parse_ver(remote):
+        print(c("  " + s["auto_upd_ok"].format(installed), GREEN))
     else:
         print(c("  " + s["auto_upd_ng"], RED))
     print()
@@ -350,7 +358,8 @@ def do_update(remote: Optional[str], lang: str):
         print(c(s["already_up"].format(__version__), GREEN))
         return
     print(c(s["updating"], CYAN))
-    if _do_pip_upgrade():
+    installed = _do_pip_upgrade()
+    if installed and _parse_ver(installed) >= _parse_ver(remote or "0"):
         print(c(s["up_done"], GREEN))
     else:
         print(c(s["auto_upd_ng"], RED))
