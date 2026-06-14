@@ -104,6 +104,14 @@ T: dict = {
         "no_chars":     "使用可能な文字がありません",
         "too_short":    "長さがプレフィックス/サフィックスより短いです",
         "gen_fail":     "指定条件でパスワードを生成できませんでした",
+        "warn_every_no_sep":     "⚠  --separator が未指定のため '-' を使用します",
+        "warn_charset_override": "⚠  --charset が指定されているため、文字種フラグは無視されます",
+        "warn_all_off":          "✗  すべての文字種が無効です。--charset を指定するか文字種を有効にしてください",
+        "warn_strict_conflict":  "⚠  --strict が指定されていますが、一部の文字種が無効なため必須チェックは部分的になります",
+        "yn_hint":               "y または N を入力してください",
+        "skip_hint":             "スキップ: Enter",
+        "int_output":            "出力",
+        "o_starts_with":         "先頭文字の制約 (lower / upper)",
         "int_title":    "interactive",
         "int_mode":     "モード",
         "int_mode_pw":  "パスワード",
@@ -205,6 +213,14 @@ T: dict = {
         "no_chars":     "No characters available",
         "too_short":    "Length is shorter than prefix + suffix",
         "gen_fail":     "Could not generate password with given constraints",
+        "warn_every_no_sep":     "⚠  --separator not set, using '-'",
+        "warn_charset_override": "⚠  --charset specified; character type flags are ignored",
+        "warn_all_off":          "✗  All character types disabled. Specify --charset or enable at least one type",
+        "warn_strict_conflict":  "⚠  --strict with some types disabled; strict check applies only to active types",
+        "yn_hint":               "Please enter y or N",
+        "skip_hint":             "skip: Enter",
+        "int_output":            "Output",
+        "o_starts_with":         "First char constraint (lower / upper)",
         "int_title":    "interactive",
         "int_mode":     "Mode",
         "int_mode_pw":  "Password",
@@ -408,6 +424,7 @@ def show_help(lang: str):
     _opt("    --charset <s>",      s["o_charset"])
     _opt("    --prefix <s>",       s["o_prefix"])
     _opt("    --suffix <s>",       s["o_suffix"])
+    _opt("    --starts-with <v>",   s["o_starts_with"])
     _opt("    --separator <s>",    s["o_separator"])
     _opt("    --every <n>",        s["o_every"])
     print()
@@ -623,7 +640,8 @@ def _ask(prompt: str, default: str = "") -> str:
         sys.exit(0)
 
 
-def _ask_yn(prompt: str) -> bool:
+def _ask_yn(prompt: str, lang: str = "ja") -> bool:
+    s = T[lang]
     while True:
         try:
             val = input(f"  {c('?', CYAN)} {c(prompt + ' (y/N): ', WHITE)}").strip().lower()
@@ -632,7 +650,7 @@ def _ask_yn(prompt: str) -> bool:
             sys.exit(0)
         if val in ("y", "n", ""):
             return val == "y"
-        print(f"  {c('  y または N を入力してください', GRAY)}")
+        print(f"  {c('  ' + s['yn_hint'], GRAY)}")
 
 
 def _interactive(lang: str) -> dict:
@@ -648,6 +666,7 @@ def _interactive(lang: str) -> dict:
     print()
 
     result: dict = {}
+    skip = f"（{s['skip_hint']}）"
 
     if mode == "2":
         # ── Passphrase ──
@@ -657,9 +676,9 @@ def _interactive(lang: str) -> dict:
         sep = _ask(s["int_pp_sep"], "-")
         if sep != "-":
             result["separator"] = sep
-        pfx = _ask(s["int_prefix"], "")
+        pfx = _ask(f"{s['int_prefix']}{skip}", "")
         if pfx: result["prefix"] = pfx
-        sfx = _ask(s["int_suffix"], "")
+        sfx = _ask(f"{s['int_suffix']}{skip}", "")
         if sfx: result["suffix"] = sfx
 
     elif mode == "3":
@@ -674,50 +693,59 @@ def _interactive(lang: str) -> dict:
 
         print()
         print(f"  {c('── ' + s['opts'] + ' ──', GRAY)}")
-        result["strict"]     = _ask_yn(s["int_strict"])
-        result["no_similar"] = _ask_yn(s["int_nosim"])
+        result["strict"]     = _ask_yn(s["int_strict"],  lang)
+        result["no_similar"] = _ask_yn(s["int_nosim"],   lang)
 
-        advanced = _ask_yn(s["int_adv"])
+        advanced = _ask_yn(s["int_adv"], lang)
         if advanced:
             print()
-            no_upper  = _ask_yn(s["int_no_upper"])
-            no_lower  = _ask_yn(s["int_no_lower"])
-            no_digits = _ask_yn(s["int_no_digits"])
-            no_symbols= _ask_yn(s["int_no_sym"])
+            no_upper  = _ask_yn(s["int_no_upper"],  lang)
+            no_lower  = _ask_yn(s["int_no_lower"],  lang)
+            no_digits = _ask_yn(s["int_no_digits"], lang)
+            no_symbols= _ask_yn(s["int_no_sym"],    lang)
             result["no_upper"]  = no_upper
             result["no_lower"]  = no_lower
             result["no_digits"] = no_digits
             result["no_symbols"]= no_symbols
 
-            charset = _ask(s["int_charset"], "")
-            if charset: result["charset"] = charset
+            charset = _ask(f"{s['int_charset']}", "")
+            if charset:
+                result["charset"] = charset
+                if no_upper or no_lower or no_digits or no_symbols:
+                    print(c(f"  {s['warn_charset_override']}", YEL))
+            else:
+                if no_upper and no_lower and no_digits and no_symbols:
+                    print(c(f"  {s['warn_all_off']}", RED))
+                    sys.exit(1)
+                if result["strict"] and (no_upper or no_lower or no_digits or no_symbols):
+                    print(c(f"  {s['warn_strict_conflict']}", YEL))
 
-            excl = _ask(f"{s['int_exclude']}（スキップ: Enter）", "")
+            excl = _ask(f"{s['int_exclude']}{skip}", "")
             if excl: result["exclude_chars"] = excl
 
             print()
-            sw_opts = f"[0] {s['int_sw_none']}  [1] {s['int_sw_lower']}  [2] {s['int_sw_upper']}  （Enter でスキップ）"
+            sw_opts = f"[0] {s['int_sw_none']}  [1] {s['int_sw_lower']}  [2] {s['int_sw_upper']}{skip}"
             sw = _ask(f"{s['int_sw']}  {c(sw_opts, GRAY)}", "0")
             if sw == "1": result["starts_with"] = "lower"
             elif sw == "2": result["starts_with"] = "upper"
 
-            sep = _ask(f"{s['int_separator']}（スキップ: Enter）", "")
+            sep = _ask(f"{s['int_separator']}{skip}", "")
             if sep:
                 result["separator"] = sep
                 every = _ask(s["int_every"], "4")
                 result["every"] = int(every) if every.isdigit() else 4
 
-            pfx = _ask(f"{s['int_prefix']}（スキップ: Enter）", "")
+            pfx = _ask(f"{s['int_prefix']}{skip}", "")
             if pfx: result["prefix"] = pfx
-            sfx = _ask(f"{s['int_suffix']}（スキップ: Enter）", "")
+            sfx = _ask(f"{s['int_suffix']}{skip}", "")
             if sfx: result["suffix"] = sfx
 
     print()
-    print(f"  {c('── Output ──', GRAY)}")
+    print(f"  {c('── ' + s['int_output'] + ' ──', GRAY)}")
     cnt = _ask(s["int_count"], "1")
     result["count"] = int(cnt) if cnt.isdigit() else 1
-    result["copy"]  = _ask_yn(s["int_copy"])
-    if _ask_yn(s["int_outfile_yn"]):
+    result["copy"]  = _ask_yn(s["int_copy"],       lang)
+    if _ask_yn(s["int_outfile_yn"], lang):
         outfile = _ask(s["int_outfile"], "")
         if outfile: result["output_file"] = outfile
 
@@ -742,8 +770,7 @@ def main():
     parser.add_argument("--count",              type=int, default=1)
     parser.add_argument("--prefix",             type=str, default="")
     parser.add_argument("--suffix",             type=str, default="")
-    parser.add_argument("--starts-with-lower",  action="store_true")
-    parser.add_argument("--starts-with-upper",  action="store_true")
+    parser.add_argument("--starts-with",         choices=["lower", "upper"], default=None)
     parser.add_argument("--no-upper",           action="store_true")
     parser.add_argument("--no-lower",           action="store_true")
     parser.add_argument("--no-digits",          action="store_true")
@@ -828,9 +855,7 @@ def main():
             args.suffix      = opts.get("suffix", args.suffix)
             args.separator   = opts.get("separator", args.separator)
             args.every       = opts.get("every",   args.every)
-            if "starts_with" in opts:
-                starts_with = opts["starts_with"]
-        args.count       = opts.get("count", 1)
+            args.count       = opts.get("count", 1)
         args.copy        = opts.get("copy",  False)
         args.output_file = opts.get("output_file", args.output_file)
 
@@ -841,7 +866,7 @@ def main():
         args.strict or args.no_similar or args.charset or
         args.count != 1 or args.length != 12 or args.prefix or args.suffix or
         args.copy or args.output_file or args.add_date or args.add_user or
-        args.exclude_chars or args.separator
+        args.exclude_chars or args.separator or args.every or args.starts_with
     )
     if not generation_intent:
         show_info(remote, lang)
@@ -852,9 +877,23 @@ def main():
     if args.add_user:
         args.prefix = getpass.getuser() + args.prefix
 
+    # Conflict validation (password mode only)
+    if not args.passphrase and args.pin is None:
+        if args.every and not args.separator:
+            print(c(f"  {s['warn_every_no_sep']}", YEL))
+            args.separator = "-"
+        if args.charset and (args.no_upper or args.no_lower or args.no_digits or args.no_symbols or args.exclude_chars):
+            print(c(f"  {s['warn_charset_override']}", YEL))
+        if not args.charset and args.no_upper and args.no_lower and args.no_digits and args.no_symbols:
+            print(c(f"  {s['warn_all_off']}", RED))
+            sys.exit(1)
+
+    # starts_with: from interactive opts or CLI flag
     starts_with = None
-    if args.starts_with_lower: starts_with = "lower"
-    elif args.starts_with_upper: starts_with = "upper"
+    if args.interactive:
+        starts_with = opts.get("starts_with")
+    elif args.starts_with:
+        starts_with = args.starts_with
 
     # Entropy
     if args.pin is not None:
@@ -926,15 +965,30 @@ def main():
         print()
 
     if args.save_profile:
-        _save_profile(args.save_profile, {
-            "length":     args.length,
-            "no_upper":   args.no_upper,
-            "no_lower":   args.no_lower,
-            "no_digits":  args.no_digits,
-            "no_symbols": args.no_symbols,
-            "strict":     args.strict,
-            "no_similar": args.no_similar,
-        })
+        profile_data: dict = {}
+        if args.passphrase:
+            profile_data["passphrase"] = True
+            profile_data["words"] = args.words
+            if args.separator: profile_data["separator"] = args.separator
+        elif args.pin is not None:
+            profile_data["pin"] = args.pin
+        else:
+            profile_data["length"] = args.length
+            if args.no_upper:    profile_data["no_upper"]    = True
+            if args.no_lower:    profile_data["no_lower"]    = True
+            if args.no_digits:   profile_data["no_digits"]   = True
+            if args.no_symbols:  profile_data["no_symbols"]  = True
+            if args.strict:      profile_data["strict"]      = True
+            if args.no_similar:  profile_data["no_similar"]  = True
+            if args.charset:     profile_data["charset"]     = args.charset
+            if args.exclude_chars: profile_data["exclude_chars"] = args.exclude_chars
+            if starts_with:      profile_data["starts_with"] = starts_with
+            if args.separator:   profile_data["separator"]   = args.separator
+            if args.every:       profile_data["every"]       = args.every
+        if args.prefix:   profile_data["prefix"]  = args.prefix
+        if args.suffix:   profile_data["suffix"]  = args.suffix
+        if args.count > 1: profile_data["count"]  = args.count
+        _save_profile(args.save_profile, profile_data)
         print(c(f"  {s['prof_saved'].format(args.save_profile)}", GREEN))
         print()
 
