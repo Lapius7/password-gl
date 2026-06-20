@@ -471,8 +471,8 @@ def show_help(lang: str):
 
 # ── Strength & Entropy ─────────────────────────────────────────────
 
-def _pool_size(use_upper, use_lower, use_digits, use_symbols,
-               no_similar, exclude_chars, charset) -> int:
+def _pool_size(use_upper: bool, use_lower: bool, use_digits: bool, use_symbols: bool,
+               no_similar: bool, exclude_chars: str, charset: str | None) -> int:
     if charset:
         return max(len(set(charset)), 1)
     pool = set()
