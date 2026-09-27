@@ -1,0 +1,30 @@
+{
+  "name": "@lapius/password-gl",
+  "version": "0.0.0",
+  "description": "セキュアなパスワード / パスフレーズを1コマンドで生成する CLI（要 Python 3.9+）",
+  "keywords": [
+    "cli",
+    "password",
+    "passphrase",
+    "generator",
+    "security"
+  ],
+  "homepage": "https://github.com/Lapius7/password-gl",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lapius7/password-gl.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "password-gl": "bin/password-gl",
+    "pgl": "bin/pgl"
+  },
+  "files": [
+    "bin/password-gl",
+    "bin/pgl",
+    "lib"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
