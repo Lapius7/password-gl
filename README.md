@@ -18,6 +18,12 @@
 pip install password-gl
 ```
 
+npm からも入れられます（Python 3.9 以降が必要）。コマンドは `password-gl` と `pgl`:
+
+```bash
+npm i -g @lapius/password-gl
+```
+
 クリップボードコピー機能を使う場合（任意）:
 
 ```bash

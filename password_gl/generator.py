@@ -3,6 +3,7 @@ import secrets
 import string
 import sys
 import os
+import re
 import json
 import datetime
 import getpass
@@ -296,8 +297,31 @@ T: dict = {
 
 # ── Version ────────────────────────────────────────────────────────
 
+# npm 版（@lapius/password-gl）から起動された場合は、最新版の確認と更新を npm で行う
+NPM_PACKAGE = "@lapius/password-gl"
+IS_NPM = os.environ.get("LAPIUS_CHANNEL") == "npm"
+if IS_NPM:
+    for _s in T.values():
+        for _k, _v in _s.items():
+            if isinstance(_v, str):
+                _s[_k] = _v.replace("pip install --upgrade password-gl", "npm i -g " + NPM_PACKAGE)
+
+
+def _do_npm_upgrade() -> bool:
+    npm = "npm.cmd" if os.name == "nt" else "npm"
+    try:
+        result = subprocess.run([npm, "i", "-g", NPM_PACKAGE + "@latest"], capture_output=True)
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
 def fetch_remote_version() -> Optional[str]:
     try:
+        if IS_NPM:
+            url = f"https://registry.npmjs.org/{NPM_PACKAGE}/latest"
+            with urllib.request.urlopen(url, timeout=3) as r:
+                return json.loads(r.read())["version"]
         url = "https://pypi.org/pypi/password-gl/json"
         with urllib.request.urlopen(url, timeout=3) as r:
             return json.loads(r.read())["info"]["version"]
@@ -325,6 +349,12 @@ def _ver_badge(remote: Optional[str], lang: str) -> str:
 
 
 def _do_pip_upgrade() -> Optional[str]:
+    if IS_NPM:
+        if not _do_npm_upgrade():
+            return None
+        # 同じ場所に新しい版が入るので、__init__.py から読み直す
+        m = re.search(r'__version__ = "([^"]+)"', Path(__file__).with_name("__init__.py").read_text(encoding="utf-8"))
+        return m.group(1) if m else None
     result = subprocess.run(
         [sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "password-gl"],
         capture_output=True
