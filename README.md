@@ -14,17 +14,26 @@
 
 ## インストール
 
-```bash
-pip install password-gl
-```
-
-npm からも入れられます（Python 3.9 以降が必要）。コマンドは `password-gl` と `pgl`:
+### npm（推奨）
 
 ```bash
 npm i -g @lapius/password-gl
 ```
 
-クリップボードコピー機能を使う場合（任意）:
+`password-gl` と短縮名 `pgl` の 2 つのコマンドが使えるようになります（Node.js 18 以降と Python 3.9 以降が必要。Python はシステムのものをそのまま使います）。
+更新も同じコマンドで行えます。npm で入れた場合は `pgl -u` も npm 経由で更新します。
+
+### pip
+
+```bash
+pip install password-gl
+```
+
+更新は `pip install --upgrade password-gl` または `pgl -u` です。
+
+### クリップボードコピー（任意）
+
+`--copy` を使う場合は、どちらの入れ方でも pyperclip を追加で入れてください:
 
 ```bash
 pip install pyperclip
@@ -124,7 +133,7 @@ pgl --list-profiles                                    # 一覧
 
 | オプション | 説明 |
 |---|---|
-| `-u, --update` | 最新バージョンに更新 |
+| `-u, --update` | 最新バージョンに更新（npm で入れた場合は npm、pip の場合は pip で更新） |
 | `--lang <ja\|en>` | 表示言語（環境変数 `PGL_LANG` でも設定可） |
 | `-v, --version` | バージョンを表示 |
 | `-h, --help` | ヘルプを表示 |
