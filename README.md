@@ -17,7 +17,7 @@
 ### npm（推奨）
 
 ```bash
-npm i -g @lapius/password-gl
+pnpm add -g @lapius/password-gl
 ```
 
 `password-gl` と短縮名 `pgl` の 2 つのコマンドが使えるようになります（Node.js 18 以降と Python 3.9 以降が必要。Python はシステムのものをそのまま使います）。
