@@ -1,62 +1,91 @@
-# password-gl [![PyPI version](https://img.shields.io/pypi/v/password-gl)](https://pypi.org/project/password-gl/) [![PyPI Downloads](https://static.pepy.tech/badge/password-gl)](https://pepy.tech/projects/password-gl) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<div align="center">
 
-セキュアなパスワード / パスフレーズを１コマンドで生成する CLI ツール。
+<p align="center">
+  <img src="docs/images/banner.png" alt="Password GL" width="100%">
+</p>
 
-- **暗号的に安全な乱数** (`secrets` モジュール) を使用
-- パスワード強度をエントロピー（bit）で可視化
-- パスワード / パスフレーズ / PIN の３モード
-- プロファイル保存・読み込み
-- 対話モード (`-i`) で全オプションをガイド付き設定
-- i18n（日本語 / English）対応
-- 新バージョン検出時に自動更新
+<p align="center"><b>English</b> | <a href="README.ja.md">日本語</a></p>
+
+<h1 align="center">Password GL</h1>
+
+<h3 align="center">Generate a secure password or passphrase with one command.</h3>
+
+<p align="center">A CLI that generates passwords, passphrases, and PINs with Python's <code>secrets</code> module and shows the strength in bits. The commands are <code>password-gl</code> and <code>pgl</code>.</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/password-gl/"><img alt="PyPI" src="https://img.shields.io/pypi/v/password-gl?style=flat-square&color=3775a9&logo=pypi&logoColor=white"></a>
+  <a href="https://www.npmjs.com/package/@lapius/password-gl"><img alt="npm" src="https://img.shields.io/npm/v/@lapius/password-gl?style=flat-square&color=cb3837&logo=npm"></a>
+  <a href="https://pepy.tech/projects/password-gl"><img alt="Downloads" src="https://static.pepy.tech/badge/password-gl?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/Lapius7/password-gl?style=flat-square&color=97ca00"></a>
+  <a href="https://www.python.org"><img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-ffd43b?style=flat-square&logo=python&logoColor=000000"></a>
+  <a href="https://github.com/Lapius7/password-gl/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/Lapius7/password-gl?style=flat-square&color=e3b341&logo=github"></a>
+  <a href="https://github.com/Lapius7/password-gl/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/Lapius7/password-gl?style=flat-square&color=3b82f6"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#options">Options</a> ·
+  <a href="#examples">Examples</a> ·
+  <a href="#development">Development</a>
+</p>
+
+</div>
 
 ---
 
-## インストール
+## Features
 
-### pnpm（推奨）
+- Cryptographically secure randomness (the `secrets` module).
+- Strength shown as entropy in bits.
+- Three modes: password, passphrase, and PIN.
+- Save and load named profiles.
+- Interactive mode (`-i`) walks you through every option.
+- Japanese and English output.
+- Auto-update when a new version is found.
 
-> このパッケージは **pnpm 前提**です。npm と pnpm の両方に入れると同じコマンドが二重になるため、`pnpm add -g` だけを使ってください。
+## Quick start
 
-```bash
+You need Python 3.9 or later. The npm package also needs Node.js 18 or later (it uses the system Python).
+
+**1. Install**
+
+With pnpm (recommended):
+
+```sh
 pnpm add -g @lapius/password-gl
 ```
 
-`password-gl` と短縮名 `pgl` の 2 つのコマンドが使えるようになります（Node.js 18 以降と Python 3.9 以降が必要。Python はシステムのものをそのまま使います）。
-更新も同じコマンドで行えます。npm で入れた場合は `pgl -u` も npm 経由で更新します。
+This gives you the `password-gl` command and the short name `pgl`. Run the same command to update. If you installed with npm, `pgl -u` also updates through npm.
 
-### pip
+> [!IMPORTANT]
+> This package assumes **pnpm**. Installing with both npm and pnpm makes the same command appear twice, so use only `pnpm add -g`.
 
-```bash
+With pip:
+
+```sh
 pip install password-gl
 ```
 
-更新は `pip install --upgrade password-gl` または `pgl -u` です。
+Update with `pip install --upgrade password-gl` or `pgl -u`.
 
-### クリップボードコピー（任意）
+To use `--copy`, install pyperclip with either method:
 
-`--copy` を使う場合は、どちらの入れ方でも pyperclip を追加で入れてください:
-
-```bash
+```sh
 pip install pyperclip
 ```
 
----
+**2. Try it**
 
-## クイックスタート
-
-```bash
-pgl                        # info 画面
-pgl -l 20 --strict         # 20文字・全種類必須
-pgl --pin 6                # 6桁PIN
-pgl --passphrase --words 5 # 5単語パスフレーズ
-pgl --count 5 --copy       # 5個生成して最後をコピー
-pgl -i                     # 対話モード（全設定をガイド付きで）
+```sh
+pgl                        # info screen
+pgl -l 20 --strict         # 20 characters, every character type required
+pgl --pin 6                # 6-digit PIN
+pgl --passphrase --words 5 # 5-word passphrase
+pgl --count 5 --copy       # generate 5 and copy the last one
+pgl -i                     # interactive mode (guided setup)
 ```
 
----
-
-## 出力例
+Sample output (the values are examples; the labels follow your locale, or set them with `--lang ja|en`):
 
 ```
   🔑  K7#mPx@2qR!v
@@ -69,113 +98,108 @@ pgl -i                     # 対話モード（全設定をガイド付きで）
        強度  ████████░░  強い  72 bit
 ```
 
----
+## Options
 
-## オプション一覧
+### Modes
 
-### モード
-
-| オプション | 説明 | デフォルト |
+| Option | What it does | Default |
 |---|---|---|
-| `-i, --interactive` | 対話モード（全設定をガイド付きで設定） | — |
-| `--pin <n>` | 数字のみの PIN を生成 | 4 |
-| `--passphrase` | 単語リストからパスフレーズを生成 | — |
+| `-i, --interactive` | Interactive mode (guided setup) | - |
+| `--pin <n>` | Generate a digits-only PIN | 4 |
+| `--passphrase` | Generate a passphrase from a word list | - |
 
-### パスワード設定
+### Password settings
 
-| オプション | 説明 | デフォルト |
+| Option | What it does | Default |
 |---|---|---|
-| `-l, --length <n>` | 文字数 | 12 |
-| `--count <n>` | 生成する数 | 1 |
-| `--strict` | 全種類（大文字・小文字・数字・記号）を必ず含める | — |
-| `--no-upper` | 大文字を使わない | — |
-| `--no-lower` | 小文字を使わない | — |
-| `--no-digits` | 数字を使わない | — |
-| `--no-symbols` | 記号を使わない | — |
-| `--no-similar` | 類似文字を除外 (`O 0 l 1 I \|`) | — |
-| `--exclude-chars <s>` | 指定した文字を除外 | — |
-| `--charset <s>` | 使用文字を直接指定（他の文字種フラグより優先） | — |
-| `--starts-with <v>` | 先頭文字の制約 (`lower` / `upper`) | — |
-| `--prefix <s>` | 先頭に追加する文字列 | — |
-| `--suffix <s>` | 末尾に追加する文字列 | — |
-| `--separator <s>` | 区切り文字 | — |
-| `--every <n>` | N 文字ごとに区切り文字を挿入（`--separator` と組み合わせて使用） | — |
+| `-l, --length <n>` | Number of characters | 12 |
+| `--count <n>` | How many to generate | 1 |
+| `--strict` | Always include every type (upper, lower, digit, symbol) | - |
+| `--no-upper` | Do not use uppercase | - |
+| `--no-lower` | Do not use lowercase | - |
+| `--no-digits` | Do not use digits | - |
+| `--no-symbols` | Do not use symbols | - |
+| `--no-similar` | Exclude look-alike characters (`O 0 l 1 I \|`) | - |
+| `--exclude-chars <s>` | Exclude the given characters | - |
+| `--charset <s>` | Set the characters directly (overrides the other type flags) | - |
+| `--starts-with <v>` | Constrain the first character (`lower` / `upper`) | - |
+| `--prefix <s>` | String to add at the start | - |
+| `--suffix <s>` | String to add at the end | - |
+| `--separator <s>` | Separator | - |
+| `--every <n>` | Insert the separator every N characters (use with `--separator`) | - |
 
-### パスフレーズ設定
+### Passphrase settings
 
-| オプション | 説明 | デフォルト |
+| Option | What it does | Default |
 |---|---|---|
-| `--words <n>` | 単語数 | 4 |
-| `--wordlist <path>` | 単語リストファイルのパス | 内蔵リスト |
-| `--separator <s>` | 単語の区切り文字 | `-` |
+| `--words <n>` | Number of words | 4 |
+| `--wordlist <path>` | Path to a word list file | built-in list |
+| `--separator <s>` | Word separator | `-` |
 
-### 出力設定
+### Output settings
 
-| オプション | 説明 |
+| Option | What it does |
 |---|---|
-| `--copy` | 最後の生成結果をクリップボードにコピー |
-| `--output-file <path>` | ファイルに保存 |
-| `--output-format <fmt>` | 出力形式 (`text` / `json` / `csv`) |
-| `--add-date` | 日付 (`YYYYMMDD`) をプレフィックスに追加 |
-| `--add-user` | ユーザー名をプレフィックスに追加 |
+| `--copy` | Copy the last result to the clipboard |
+| `--output-file <path>` | Save to a file |
+| `--output-format <fmt>` | Output format (`text` / `json` / `csv`) |
+| `--add-date` | Add the date (`YYYYMMDD`) as a prefix |
+| `--add-user` | Add the user name as a prefix |
 
-### プロファイル
+### Profiles
 
-よく使う設定を名前付きで保存・呼び出しできます。
+Save the settings you use often under a name and load them later.
 
-```bash
-pgl -l 20 --strict --no-similar --save-profile work   # 保存
-pgl --profile work                                     # 呼び出し
-pgl --list-profiles                                    # 一覧
+```sh
+pgl -l 20 --strict --no-similar --save-profile work   # save
+pgl --profile work                                     # load
+pgl --list-profiles                                    # list
 ```
 
-プロファイルは `~/.pgl/profiles.json` に保存されます。
+Profiles are stored in `~/.pgl/profiles.json`.
 
-### その他
+### Other
 
-| オプション | 説明 |
+| Option | What it does |
 |---|---|
-| `-u, --update` | 最新バージョンに更新（npm で入れた場合は npm、pip の場合は pip で更新） |
-| `--lang <ja\|en>` | 表示言語（環境変数 `PGL_LANG` でも設定可） |
-| `-v, --version` | バージョンを表示 |
-| `-h, --help` | ヘルプを表示 |
+| `-u, --update` | Update to the latest version (through npm if installed with npm, through pip otherwise) |
+| `--lang <ja\|en>` | Display language (also set by the `PGL_LANG` environment variable) |
+| `-v, --version` | Show the version |
+| `-h, --help` | Show help |
 
----
+## Examples
 
-## 使用例
-
-```bash
-# 16文字・記号なし・全種類必須を3つ生成
+```sh
+# three 16-character passwords, no symbols, every type required
 pgl -l 16 --no-symbols --strict --count 3
 
-# 4文字ごとにハイフンで区切る
+# separate with a hyphen every 4 characters
 pgl -l 16 --separator - --every 4
-# → abcd-EFGH-1234-!@#$
+# -> abcd-EFGH-1234-!@#$
 
-# 日付＋ユーザー名をプレフィックスに
+# date and user name as a prefix
 pgl --add-date --add-user -l 8
 
-# 5単語パスフレーズをクリップボードにコピー
+# 5-word passphrase, copied to the clipboard
 pgl --passphrase --words 5 --copy
 
-# JSON形式でファイルに保存
+# save 10 passwords to a JSON file
 pgl --count 10 --output-format json --output-file passwords.json
 
-# プロファイルに保存して再利用
+# save a profile and reuse it
 pgl -l 24 --strict --no-similar --save-profile strong
 pgl --profile strong --count 3
 ```
 
----
+> [!NOTE]
+> The options above were checked against the argument definitions in `password_gl/generator.py`. They were not run for this rewrite, and the clipboard, auto-update, and npm paths are unverified here.
 
-## 開発者
+## Development
 
-**Lapius7** — [https://dev.lapius7.com](https://dev.lapius7.com)
+Source: `password_gl/generator.py` (single module). Releases are published to PyPI (`.github/workflows/publish.yml`) and npm (`.github/workflows/npm.yml`) when a GitHub Release is published; npm uses Trusted Publisher, so no token is needed. The npm package in `npm/` bundles the Python source and runs it with the system Python.
 
-- X: [@Lapius7](https://x.com/Lapius7)
-- GitHub: [Lapius7/password-gl](https://github.com/Lapius7/password-gl)
-- PyPI: [password-gl](https://pypi.org/project/password-gl/)
+**Author**: Lapius7 - [https://dev.lapius7.com](https://dev.lapius7.com) · X: [@Lapius7](https://x.com/Lapius7) · PyPI: [password-gl](https://pypi.org/project/password-gl/)
 
-## ライセンス
+## License
 
 MIT
